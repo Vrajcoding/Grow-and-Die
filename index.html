@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow or Die - Plant Survival Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Start Screen -->
+    <div id="startScreen" class="screen active">
+        <div class="container">
+            <div class="start-content">
+                <h1 class="game-title">🌱 Grow or Die</h1>
+                <p class="game-subtitle">Survive and thrive in the wild!</p>
+                
+                <div class="instructions">
+                    <h3>How to Play:</h3>
+                    <ul>
+                        <li>🌱 Start as a seed and grow through stages</li>
+                        <li>💧 Balance Water, Sunlight, and Nutrients</li>
+                        <li>🌿 Survive random events and challenges</li>
+                        <li>🌳 Reach Tree stage to win!</li>
+                    </ul>
+                </div>
+                
+                <button id="startBtn" class="btn btn-primary">
+                    <span>🌱 Start Growing</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="container">
+            <!-- Orientation/Rotate Hint for mobile landscape -->
+            <div id="rotateHint" class="rotate-hint" aria-hidden="true">
+                <div class="rotate-card">
+                    <div class="rotate-icon">📱↻</div>
+                    <div class="rotate-text">For best experience, rotate your device</div>
+                </div>
+            </div>
+            <!-- Header -->
+            <div class="game-header">
+                <div class="level-info">
+                    <div class="level-display">
+                        <span id="levelIcon">🌱</span>
+                        <span id="levelName">Seed</span>
+                    </div>
+                    <div class="score-info">
+                        <div class="score">Score: <span id="currentScore">0</span></div>
+                        <div class="high-score">Best: <span id="highScore">0</span></div>
+                        <button id="expandBtn" class="icon-btn expand-btn" title="Expand to Fullscreen" aria-label="Expand Game">
+                            <span class="expand-icon">⤢</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plant Display -->
+            <div class="plant-container">
+                <div id="plantDisplay" class="plant-display">
+                    <div class="plant-stage seed">🌱</div>
+                </div>
+                <div id="backgroundLayer" class="background-layer soil"></div>
+            </div>
+
+            <!-- Status Bars -->
+            <div class="status-container">
+                <div class="status-bar">
+                    <div class="status-label">❤️ Health</div>
+                    <div class="bar-container">
+                        <div id="healthBar" class="bar health-bar" style="width: 100%"></div>
+                    </div>
+                    <span id="healthValue" class="status-value">100</span>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-label">💧 Water</div>
+                    <div class="bar-container">
+                        <div id="waterBar" class="bar water-bar" style="width: 50%"></div>
+                    </div>
+                    <span id="waterValue" class="status-value">50</span>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-label">☀️ Sunlight</div>
+                    <div class="bar-container">
+                        <div id="sunlightBar" class="bar sunlight-bar" style="width: 50%"></div>
+                    </div>
+                    <span id="sunlightValue" class="status-value">50</span>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-label">🌱 Nutrients</div>
+                    <div class="bar-container">
+                        <div id="nutrientsBar" class="bar nutrients-bar" style="width: 50%"></div>
+                    </div>
+                    <span id="nutrientsValue" class="status-value">50</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions-container">
+                <button id="waterBtn" class="action-btn water">
+                    <span class="btn-icon">💧</span>
+                    <span class="btn-text">Water</span>
+                </button>
+                
+                <button id="sunlightBtn" class="action-btn sunlight">
+                    <span class="btn-icon">☀️</span>
+                    <span class="btn-text">Sunlight</span>
+                </button>
+                
+                <button id="nutrientsBtn" class="action-btn nutrients">
+                    <span class="btn-icon">🌱</span>
+                    <span class="btn-text">Nutrients</span>
+                </button>
+                
+                <button id="restBtn" class="action-btn rest">
+                    <span class="btn-icon">💤</span>
+                    <span class="btn-text">Rest</span>
+                </button>
+                
+                <button id="specialBtn" class="action-btn special hidden">
+                    <span class="btn-icon">✨</span>
+                    <span class="btn-text">Special</span>
+                    <span id="specialCooldown" class="cooldown-indicator"></span>
+                </button>
+            </div>
+            
+            <!-- Game Controls -->
+            <div class="game-controls">
+                <button id="tipsBtn" class="control-btn tips-btn">
+                    <span class="btn-icon">💡</span>
+                    <span class="btn-text">Tips</span>
+                </button>
+                
+                <button id="restartGameBtn" class="control-btn restart-btn">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">Restart</span>
+                </button>
+            </div>
+
+            <!-- Event Display -->
+            <div id="eventDisplay" class="event-display hidden">
+                <div class="event-content">
+                    <span id="eventIcon" class="event-icon">🌧️</span>
+                    <span id="eventText" class="event-text">Rainstorm approaches!</span>
+                </div>
+            </div>
+
+            <!-- Upgrade Modal -->
+            <div id="upgradeModal" class="modal hidden">
+                <div class="modal-content">
+                    <h3>🌿 Level Up! Choose an Upgrade:</h3>
+                    <div class="upgrade-options">
+                        <button id="strongRootsBtn" class="upgrade-btn">
+                            <span class="upgrade-icon">🌿</span>
+                            <span class="upgrade-name">Strong Roots</span>
+                            <span class="upgrade-desc">Water drains slower</span>
+                        </button>
+                        <button id="wideLeavesBtn" class="upgrade-btn">
+                            <span class="upgrade-icon">🍃</span>
+                            <span class="upgrade-name">Wide Leaves</span>
+                            <span class="upgrade-desc">More sunlight gain</span>
+                        </button>
+                        <button id="thickBarkBtn" class="upgrade-btn">
+                            <span class="upgrade-icon">🛡️</span>
+                            <span class="upgrade-name">Thick Bark</span>
+                            <span class="upgrade-desc">Pests do less damage</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- End Screen -->
+    <div id="endScreen" class="screen">
+        <div class="container">
+            <div class="end-content">
+                <div id="endIcon" class="end-icon">🌳</div>
+                <h2 id="endTitle" class="end-title">Congratulations!</h2>
+                <p id="endMessage" class="end-message">You've grown into a magnificent tree!</p>
+                
+                <div class="final-stats">
+                    <div class="stat">
+                        <span class="stat-label">Final Score:</span>
+                        <span id="finalScore" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Highest Score:</span>
+                        <span id="finalHighScore" class="stat-value">0</span>
+                    </div>
+                </div>
+                
+                <button id="restartBtn" class="btn btn-primary">
+                    <span>🌱 Play Again</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
