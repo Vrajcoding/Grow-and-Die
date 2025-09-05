@@ -524,6 +524,10 @@ body {
     background: rgba(33, 150, 243, 0.2);
 }
 
+.sound-btn:hover {
+    background: rgba(156, 39, 176, 0.2);
+}
+
 .restart-btn:hover {
     background: rgba(244, 67, 54, 0.2);
 }

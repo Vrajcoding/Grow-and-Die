@@ -43,11 +43,96 @@ class GameState {
         // Special abilities
         this.specialCooldown = 0;
         
+        // Sound system
+        this.soundEnabled = localStorage.getItem('growOrDieSoundEnabled') !== 'false';
+        this.audioContext = null;
+        this.initAudioContext();
+        
         this.loadHighScore();
     }
     
     loadHighScore() {
         this.highScore = parseInt(localStorage.getItem('growOrDieHighScore')) || 0;
+    }
+    
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log('Web Audio API not supported');
+            this.soundEnabled = false;
+        }
+    }
+    
+    playSound(frequency, duration, type = 'sine', volume = 0.3) {
+        if (!this.soundEnabled || !this.audioContext) return;
+        
+        try {
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+            
+            oscillator.start(this.audioContext.currentTime);
+            oscillator.stop(this.audioContext.currentTime + duration);
+        } catch (e) {
+            console.log('Sound playback error:', e);
+        }
+    }
+    
+    playLevelUpSound() {
+        // Ascending chord progression for level up
+        this.playSound(523.25, 0.2, 'sine', 0.4); // C5
+        setTimeout(() => this.playSound(659.25, 0.2, 'sine', 0.4), 100); // E5
+        setTimeout(() => this.playSound(783.99, 0.3, 'sine', 0.5), 200); // G5
+        setTimeout(() => this.playSound(1046.50, 0.4, 'sine', 0.6), 300); // C6
+    }
+    
+    playActionSound() {
+        // Pleasant chime for actions
+        this.playSound(800, 0.15, 'sine', 0.2);
+    }
+    
+    playSpecialSound() {
+        // Magical sound for special abilities
+        this.playSound(440, 0.1, 'sine', 0.3); // A4
+        setTimeout(() => this.playSound(554.37, 0.1, 'sine', 0.3), 50); // C#5
+        setTimeout(() => this.playSound(659.25, 0.2, 'sine', 0.4), 100); // E5
+    }
+    
+    playEventSound() {
+        // Warning sound for events
+        this.playSound(300, 0.3, 'triangle', 0.3);
+    }
+    
+    playGameOverSound() {
+        // Descending sound for game over
+        this.playSound(523.25, 0.3, 'sine', 0.4); // C5
+        setTimeout(() => this.playSound(392.00, 0.3, 'sine', 0.4), 150); // G4
+        setTimeout(() => this.playSound(261.63, 0.4, 'sine', 0.5), 300); // C4
+    }
+    
+    playWinSound() {
+        // Victory fanfare
+        this.playSound(523.25, 0.2, 'sine', 0.4); // C5
+        setTimeout(() => this.playSound(659.25, 0.2, 'sine', 0.4), 100); // E5
+        setTimeout(() => this.playSound(783.99, 0.2, 'sine', 0.4), 200); // G5
+        setTimeout(() => this.playSound(1046.50, 0.2, 'sine', 0.4), 300); // C6
+        setTimeout(() => this.playSound(1318.51, 0.4, 'sine', 0.5), 400); // E6
+    }
+    
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('growOrDieSoundEnabled', this.soundEnabled.toString());
+        return this.soundEnabled;
     }
     
     saveHighScore() {
@@ -126,16 +211,19 @@ class GameState {
                 this.stats.water = Math.min(100, this.stats.water + baseGain + bonusGain);
                 this.stats.health = Math.min(100, this.stats.health + 5);
                 this.score += 10 + (bonusGain > 0 ? 5 : 0);
+                this.playActionSound();
                 break;
             case 'sunlight':
                 this.stats.sunlight = Math.min(100, this.stats.sunlight + baseGain + bonusGain);
                 this.stats.health = Math.min(100, this.stats.health + 5);
                 this.score += 10 + (bonusGain > 0 ? 5 : 0);
+                this.playActionSound();
                 break;
             case 'nutrients':
                 this.stats.nutrients = Math.min(100, this.stats.nutrients + baseGain + bonusGain);
                 this.stats.health = Math.min(100, this.stats.health + 5);
                 this.score += 10 + (bonusGain > 0 ? 5 : 0);
+                this.playActionSound();
                 break;
             case 'rest':
                 this.stats.health = Math.min(100, this.stats.health + 15);
@@ -143,6 +231,7 @@ class GameState {
                 this.stats.sunlight = Math.max(0, this.stats.sunlight - 5);
                 this.stats.nutrients = Math.max(0, this.stats.nutrients - 5);
                 this.score += 5;
+                this.playActionSound();
                 break;
             case 'special':
                 this.useSpecialAbility();
@@ -227,6 +316,7 @@ class GameState {
         this.eventActive = true;
         this.eventTurns = this.currentEvent.duration;
         
+        this.playEventSound();
         this.showEvent();
     }
     
@@ -247,11 +337,13 @@ class GameState {
         if (this.stats.health <= 0) {
             this.gameOver = true;
             this.won = false;
+            this.playGameOverSound();
             this.saveHighScore();
             this.showEndScreen();
         } else if (this.isMaxLevel() && this.turnsInCurrentLevel >= this.getCurrentLevel().turnsToNext) {
             this.gameOver = true;
             this.won = true;
+            this.playWinSound();
             this.saveHighScore();
             this.showEndScreen();
         }
@@ -269,6 +361,7 @@ class GameState {
     
     applyUpgrade(upgradeType) {
         this.upgrades[upgradeType]++;
+        this.playLevelUpSound();
         this.hideUpgradeModal();
     }
     
@@ -345,6 +438,9 @@ class GameState {
         
         // Update tips button
         this.updateTipsButton();
+        
+        // Update sound button
+        this.updateSoundButton();
     }
     
     updateSpecialButton() {
@@ -376,6 +472,18 @@ class GameState {
         } else {
             tipsBtn.style.opacity = '1';
             tipsBtn.title = 'Get a helpful tip';
+        }
+    }
+    
+    updateSoundButton() {
+        const soundBtn = document.getElementById('soundBtn');
+        const soundIcon = document.querySelector('#soundBtn .btn-icon');
+        if (this.soundEnabled) {
+            soundIcon.textContent = '🔊';
+            soundBtn.title = 'Disable Sound';
+        } else {
+            soundIcon.textContent = '🔇';
+            soundBtn.title = 'Enable Sound';
         }
     }
     
@@ -425,6 +533,8 @@ class GameState {
         
         const level = this.getCurrentLevel();
         this.specialCooldown = 3; // 3 turn cooldown
+        
+        this.playSpecialSound();
         
         switch (level.special) {
             case 'photosynthesis':
@@ -562,6 +672,12 @@ document.getElementById('specialBtn').addEventListener('click', () => game.takeT
 
 // Control buttons
 document.getElementById('tipsBtn').addEventListener('click', () => game.showTip());
+document.getElementById('soundBtn').addEventListener('click', () => {
+    const soundEnabled = game.toggleSound();
+    const soundIcon = document.querySelector('#soundBtn .btn-icon');
+    soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+    document.getElementById('soundBtn').title = soundEnabled ? 'Disable Sound' : 'Enable Sound';
+});
 document.getElementById('restartGameBtn').addEventListener('click', () => {
     if (confirm('Are you sure you want to restart? Your progress will be lost!')) {
         restartGame();
